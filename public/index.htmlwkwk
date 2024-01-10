@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-time Sensor Data</title>
+  <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>Real-time Sensor Data</h1>
+  <canvas id="sensorChart" width="400" height="200"></canvas>
+
+  <script>
+    const socket = io();
+    const ctx = document.getElementById('sensorChart').getContext('2d');
+    const data = {
+      labels: [],
+      datasets: [{
+        label: 'Sensor Value',
+        data: [],
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1,
+        fill: false
+      }]
+    };
+
+    const options = {
+      scales: {
+        x: {
+          type: 'linear',
+          position: 'bottom'
+        }
+      }
+    };
+
+    const sensorChart = new Chart(ctx, {
+      type: 'line',
+      data: data,
+      options: options
+    });
+
+    socket.on('sensorData', (data) => {
+      updateChart(data);
+    });
+
+    function updateChart(newData) {
+      const timestamp = new Date().toLocaleTimeString();
+      data.labels.push(timestamp);
+      data.datasets[0].data.push(newData.value);
+
+      // Update only the last 10 data points for better visualization
+      if (data.labels.length > 10) {
+        data.labels.shift();
+        data.datasets[0].data.shift();
+      }
+
+      sensorChart.update();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!-- index.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Potensiometer Monitor</title>
+  <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>Potensiometer Value Monitor</h1>
+  <div style="width: 80%; margin: auto;">
+    <canvas id="potChart"></canvas>
+  </div>
+
+  <script>
+    const socket = io();
+    let potValues = Array.from({ length: 26 }, (_, i) => null);
+
+    const ctx = document.getElementById('potChart').getContext('2d');
+    const potChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: Array.from({ length: 26 }, (_, i) => i),
+        datasets: [{
+          label: 'Potensiometer Value',
+          borderColor: 'rgb(75, 192, 192)',
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          data: potValues,
+        }]
+      },
+      options: {
+        scales: {
+          x: {
+            type: 'linear',
+            position: 'bottom',
+            max: 25, // Batas maksimum sumbu x
+          },
+          y: {
+            min: 0,
+            max: 1023
+          }
+        }
+      }
+    });
+
+    socket.on('potensiometer', function(potValue) {
+      // Memindahkan semua nilai ke kiri
+      potValues.shift();
+      // Menambahkan nilai baru ke akhir
+      potValues.push(potValue);
+
+      // Mengupdate data pada chart
+      potChart.data.datasets[0].data = potValues;
+
+      // Mengupdate chart
+      potChart.update();
+    });
+  </script>
+</body>
+</html>
